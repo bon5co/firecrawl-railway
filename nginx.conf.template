@@ -1,0 +1,55 @@
+daemon off;
+pid /tmp/nginx.pid;
+error_log /dev/stderr warn;
+worker_processes auto;
+
+events { worker_connections 1024; }
+
+http {
+  access_log off;
+  client_body_temp_path /tmp/nginx-body;
+  proxy_temp_path /tmp/nginx-proxy;
+  fastcgi_temp_path /tmp/nginx-fastcgi;
+  uwsgi_temp_path /tmp/nginx-uwsgi;
+  scgi_temp_path /tmp/nginx-scgi;
+
+  # Uploads and long crawls: let the app decide, not the gateway.
+  client_max_body_size 64m;
+  proxy_read_timeout 600s;
+  proxy_send_timeout 600s;
+  proxy_buffering off;
+
+  # A request is authorised when it carries the deploy's own key, either as
+  # a bearer token (what the Firecrawl SDKs send) or as X-API-Key.
+  map "$http_authorization:$http_x_api_key" $fc_authorized {
+    default                          0;
+    "~^Bearer ${FIRECRAWL_API_KEY}:"  1;
+    "~^:${FIRECRAWL_API_KEY}$"        1;
+  }
+
+  server {
+    listen ${PORT} default_server;
+    server_name _;
+
+    # Unauthenticated: the Railway healthcheck and a banner that leaks nothing.
+    location = / {
+      proxy_pass http://127.0.0.1:${INTERNAL_PORT}/;
+      proxy_set_header Host $host;
+    }
+
+    location / {
+      if ($fc_authorized = 0) {
+        return 401 '{"success":false,"error":"Unauthorized: send this deployment\'s FIRECRAWL_API_KEY as an Authorization: Bearer header."}';
+      }
+      proxy_pass http://127.0.0.1:${INTERNAL_PORT};
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    }
+
+    default_type application/json;
+  }
+}
