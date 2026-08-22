@@ -59,4 +59,6 @@ trap 'kill $NGINX_PID 2>/dev/null || true' TERM INT
 #    listener rather than at Railway's injected public port.
 # ---------------------------------------------------------------------------
 export PORT="$INTERNAL_PORT"
-exec node dist/src/harness.js
+# --start-docker means "skip install, assume built" -- it is the mode the official
+# image ships as its CMD, not a request to talk to a Docker daemon.
+exec node dist/src/harness.js --start-docker
