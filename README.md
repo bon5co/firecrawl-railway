@@ -1,5 +1,9 @@
 # firecrawl-railway
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/firecrawl-or-just-updated-web-scraper-ap?referralCode=Z1xivh&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
+**Deploy on Railway:** [Firecrawl template](https://railway.com/deploy/firecrawl-or-just-updated-web-scraper-ap?referralCode=Z1xivh&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 Wrapper image for the Railway template
 **Firecrawl | (Just Updated) Web Scraper API for LLMs, Not Open to the Internet**.
 
